@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- iOS Web App Fullscreen Config -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="format-detection" content="telephone=no">
+    <title>请假管理</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* Top Navigation Bar */
+        .navbar {
+            background-color: #1a1a1a; /* Dark background matching the image header */
+            color: white;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            font-size: 18px;
+        }
+
+        .nav-back {
+            margin-right: 15px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .nav-close {
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .nav-title {
+            font-size: 18px;
+            font-weight: 500;
+            flex-grow: 1;
+            text-align: center;
+            margin-right: 40px; /* Balance the left icons */
+        }
+
+        .nav-right {
+            font-size: 20px;
+            letter-spacing: 2px;
+        }
+
+        /* Breadcrumb */
+        .breadcrumb {
+            background-color: white;
+            padding: 10px 15px;
+            color: #666;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        .breadcrumb-icon {
+            color: #4a90e2;
+            margin-right: 5px;
+            font-size: 14px;
+        }
+
+        .breadcrumb-item {
+            margin: 0 2px;
+        }
+        
+        .breadcrumb-item.active {
+            color: #333;
+        }
+
+        /* Main Content */
+        .container {
+            padding: 10px;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Section Title */
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title::before {
+            content: '';
+            display: block;
+            width: 4px;
+            height: 16px;
+            background-color: #4a90e2;
+            margin-right: 8px;
+            border-radius: 2px;
+        }
+
+        /* Leave Info List */
+        .info-list {
+            position: relative;
+        }
+
+        .info-item {
+            display: flex;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .info-label {
+            color: #888;
+            width: 100px;
+            flex-shrink: 0;
+        }
+
+        .info-value {
+            color: #333;
+            flex-grow: 1;
+        }
+
+        .status-blue {
+            color: #4a90e2;
+        }
+
+        /* Stamp */
+        .stamp {
+            position: absolute;
+            top: 0px;
+            right: 10px;
+            width: 80px;
+            height: 80px;
+            border: 2px solid #6ac299;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6ac299;
+            font-size: 18px;
+            font-weight: bold;
+            transform: rotate(-15deg);
+            opacity: 0.8;
+            z-index: 10;
+        }
+        
+        .stamp-inner {
+            border: 1px dashed #6ac299;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Timeline */
+        .timeline {
+            padding-left: 10px;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 20px;
+            padding-left: 25px;
+            border-left: 1px solid #ddd;
+        }
+
+        .timeline-item:last-child {
+            border-left: none;
+        }
+
+        .timeline-icon {
+            position: absolute;
+            left: -8px; /* Center on line (line width 1px, icon 16px -> -8 + 0.5 = -7.5) */
+            top: 0;
+            width: 16px;
+            height: 16px;
+            background-color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+        }
+
+        .icon-check {
+            color: #4a90e2;
+            font-size: 16px;
+        }
+        
+        .icon-dot {
+            width: 10px;
+            height: 10px;
+            background-color: #4a90e2;
+            border-radius: 50%;
+            border: 2px solid #d0e4ff;
+        }
+
+        .timeline-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .timeline-left {
+            flex-grow: 1;
+        }
+
+        .timeline-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .timeline-status {
+            font-weight: normal;
+            margin-left: 5px;
+            font-size: 12px;
+        }
+        
+        .status-green {
+            color: #28a745;
+        }
+
+        .timeline-person {
+            color: #888;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .timeline-date {
+            color: #888;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        /* SVG Icons */
+        .svg-icon {
+            width: 1em;
+            height: 1em;
+            fill: currentColor;
+            vertical-align: middle;
+        }
+        
+        /* Editable styling */
+        .editable {
+            border-bottom: 1px dashed transparent; /* Hidden by default */
+            cursor: text;
+            padding: 0 2px;
+            transition: border-bottom-color 0.2s;
+            -webkit-user-select: text; /* iOS Safari selection fix */
+            user-select: text;
+        }
+        
+        .editable:focus {
+            outline: none;
+            border-bottom: 1px solid #4a90e2;
+            background-color: rgba(74, 144, 226, 0.1);
+        }
+
+        /* Prevent zoom on focus on iOS by ensuring font size is >= 16px if inputs were used, 
+           but for contenteditable, we just rely on meta viewport. */
+
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="navbar">
+        <div class="nav-left">
+            <div class="nav-back">
+                <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </div>
+            <div class="nav-close">
+                <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </div>
+        </div>
+        <div class="nav-title">请假管理</div>
+        <div class="nav-right">...</div>
+    </div>
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+        <span class="breadcrumb-icon">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+        </span>
+        <span class="breadcrumb-item">首页</span>
+        <span class="breadcrumb-item">&gt;</span>
+        <span class="breadcrumb-item">请假管理</span>
+        <span class="breadcrumb-item">&gt;</span>
+        <span class="breadcrumb-item active">请假管理</span>
+    </div>
+
+    <div class="container">
+        <!-- Leave Information -->
+        <div class="card">
+            <div class="section-title">请假信息</div>
+            
+            <div class="stamp">
+                <div class="stamp-inner">已通过</div>
+            </div>
+
+            <div class="info-list">
+                <div class="info-item">
+                    <div class="info-label">请假类型：</div>
+                    <div class="info-value">节假日及寒暑假请假</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">请假去向：</div>
+                    <div class="info-value"></div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">详细地址：</div>
+                    <div class="info-value"></div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">开始时间：</div>
+                    <div class="info-value editable" id="startTime" contenteditable="true" spellcheck="false" data-key="leave_startTime">2025-12-13 08:42:00</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">结束时间：</div>
+                    <div class="info-value editable" id="endTime" contenteditable="true" spellcheck="false" data-key="leave_endTime">2025-12-13 22:42:00</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">统计时长：</div>
+                    <div class="info-value editable" id="duration" contenteditable="true" spellcheck="false" data-key="leave_duration">天小时分钟</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">紧急联系人：</div>
+                    <div class="info-value editable" id="contact" contenteditable="true" spellcheck="false" data-key="leave_contact"></div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">紧急联系人电话：</div>
+                    <div class="info-value editable" id="phone" contenteditable="true" spellcheck="false" data-key="leave_phone"></div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">请假理由：</div>
+                    <div class="info-value editable" id="reason" contenteditable="true" spellcheck="false" data-key="leave_reason">探亲</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">请假状态：</div>
+                    <div class="info-value status-blue">审核通过</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">销假状态：</div>
+                    <div class="info-value"></div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">请假附件：</div>
+                    <div class="info-value"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress -->
+        <div class="card">
+            <div class="section-title">办理进度</div>
+            <div class="timeline">
+                <!-- Step 1 -->
+                <div class="timeline-item">
+                    <div class="timeline-icon">
+                        <svg class="icon-check" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke="#4a90e2"></circle><path d="M9 12l2 2 4-4" stroke="#4a90e2"></path></svg>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-left">
+                            <div class="timeline-title">申请 <span class="timeline-status status-green">申请</span></div>
+                            <div class="timeline-person">彭威普</div>
+                        </div>
+                        <div class="timeline-date">2025-12-12 15:43</div>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="timeline-item">
+                    <div class="timeline-icon">
+                        <svg class="icon-check" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke="#4a90e2"></circle><path d="M9 12l2 2 4-4" stroke="#4a90e2"></path></svg>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-left">
+                            <div class="timeline-title">辅导员审核 <span class="timeline-status status-green">审核通过</span></div>
+                            <div class="timeline-person">周淑婷</div>
+                        </div>
+                        <div class="timeline-date">2025-12-12 17:23</div>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="timeline-item">
+                    <div class="timeline-icon">
+                         <div class="icon-dot"></div>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-left">
+                            <div class="timeline-title">结束</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Persistence Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const editables = document.querySelectorAll('[contenteditable="true"]');
+            
+            editables.forEach(el => {
+                const key = el.getAttribute('data-key');
+                if (key) {
+                    // Load saved value
+                    const saved = localStorage.getItem(key);
+                    if (saved !== null) {
+                        el.innerText = saved;
+                    }
+
+                    // Save on change
+                    // 'input' fires on every keystroke, 'blur' fires when leaving the field
+                    el.addEventListener('input', function() {
+                        localStorage.setItem(key, this.innerText);
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
